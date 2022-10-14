@@ -1,0 +1,4 @@
+*.obj
+dumpsim*
+assembler.linux
+.vscode
