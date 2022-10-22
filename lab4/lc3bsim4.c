@@ -919,10 +919,12 @@ void eval_micro_sequencer() {
         // printf("r %d e %d ird %d cond2 %d cond1 %d cond0 %d\n", r, e, ird, cond2, cond1, cond0);
     }
     // printf("r %d e %d ird %d cond2 %d cond1 %d cond0 %d\n", r, e, ird, cond2, cond1, cond0);
-    if(e == 1){
+    if(CURRENT_LATCHES.STATE_NUMBER == 42) 
+        NEXT_LATCHES.E = 0;
+    if(e == 1 && (mio_en==1 || CURRENT_LATCHES.STATE_NUMBER == 10 || CURRENT_LATCHES.STATE_NUMBER == 11)){
+        // printf("We are in here!!!!!!\n");
         next_state_address = 42; // any time there is an exception go to state 42
         NEXT_LATCHES.E = 0;
-        flag = 1;
     }
     else{
         if(ird == 1){
@@ -951,10 +953,13 @@ void eval_micro_sequencer() {
     }
 
     if(NEXT_LATCHES.STATE_NUMBER == 10 || NEXT_LATCHES.STATE_NUMBER == 11){
-        // printf("Unkonw opcode exc \n");
+        // printf("Unkonw opcode exc in state %d at cycle %d \n", CURRENT_LATCHES.STATE_NUMBER, CYCLE_COUNT);
+        // printf("Next state is %d\n", NEXT_LATCHES.STATE_NUMBER);
         NEXT_LATCHES.E = 1;
         NEXT_LATCHES.EXCV = Low16bits(UNKNOWNEXCVEC);
     }
+
+    // printf("Actual********** Next state is %d\n", NEXT_LATCHES.STATE_NUMBER);
 
     memcpy(NEXT_LATCHES.MICROINSTRUCTION, CONTROL_STORE[NEXT_LATCHES.STATE_NUMBER], sizeof(int)*CONTROL_STORE_BITS);
 
@@ -1314,13 +1319,15 @@ void latch_datapath_values() {
     //(psr15 == 1 && NEXT_LATCHES.MAR >= SYSTEMSPACE_LOWER && NEXT_LATCHES.MAR <= SYSTEMSPACE_UPPER)
     // (mio_en == 1 && datasize == 1 && mar0 == 1)
 
-    if(psr15 == 1 && NEXT_LATCHES.MAR >= SYSTEMSPACE_LOWER && NEXT_LATCHES.MAR <= SYSTEMSPACE_UPPER && iropcode != 15 && iropcode != 8 && flag==0){
-        // printf("psr15 %d mar 0x%.8x priority exc \n", psr15, NEXT_LATCHES.MAR);
+    if(mio_en == 1 && psr15 == 1 && NEXT_LATCHES.MAR >= SYSTEMSPACE_LOWER && NEXT_LATCHES.MAR <= SYSTEMSPACE_UPPER && iropcode != 15 && iropcode != 8){
+        // printf("in state %d at cyclecount %d psr15 %d mar 0x%.4x priority exc \n", CURRENT_LATCHES.STATE_NUMBER, CYCLE_COUNT, psr15, NEXT_LATCHES.MAR);
+        // printf("Next state is %d\n", NEXT_LATCHES.STATE_NUMBER);
         NEXT_LATCHES.E = 1;
         NEXT_LATCHES.EXCV = Low16bits(PROTECTEXCVEC);
     }
     else if(mio_en == 1 && datasize == 1 && mar0 == 1){
-        // printf("Unaligned access exc MAR = 0x%.8x \n", mar);
+        // printf("Unaligned access in state %d at cyclecount %d exc MAR = 0x%.4x \n", CURRENT_LATCHES.STATE_NUMBER, CYCLE_COUNT, NEXT_LATCHES.MAR);
+        // printf("Next state is %d\n", NEXT_LATCHES.STATE_NUMBER);
         NEXT_LATCHES.E = 1;
         NEXT_LATCHES.EXCV = Low16bits(UNALIGNEXCVEC);
     }
