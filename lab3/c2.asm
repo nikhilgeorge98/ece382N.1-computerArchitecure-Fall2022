@@ -1,0 +1,5 @@
+.ORIG 0x3000
+ADD R4, R4, #5
+LSHF R4, R4, #1
+RET
+.END
